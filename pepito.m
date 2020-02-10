@@ -119,7 +119,7 @@ classdef pepito < handle
             % ----------------- STEP 2: CN2 RETRIEVAL ------------------ %
             
             %3.1. TT SUBTRACTION
-            obj.LEpsf_noTT = pepito.compensateTipTilt(obj.SEpsf,obj.nref);
+            obj.LEpsf_noTT = obj.compensateTipTilt(obj.SEpsf,obj.nref);
             
             %3.2. MODEL INSTANTIATION
             obj = obj.instantiateModel();
