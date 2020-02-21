@@ -1,32 +1,37 @@
 %% MANAGE workspaces
 close all; % close all figures
 clear all; % clear the workspace
-
-path_oomao = '/home/omartin/Projects/SIMULATIONS/OOMAO/mfiles/'; % the oomao path
-path_workspace = '/home/omartin/Projects/PROFILING/PEPITO/CODES/_processData/'; % the simulation folder path
-path_pepito= '/home/omartin/Projects/PROFILING/PEPITO/pepito/'; % the simulation folder path
-addpath(genpath(path_oomao),path_workspace,path_pepito);
+path_pepito = '/home/omartin/Projects/PEPITO/PEPITO/';
+addpath(genpath(path_pepito));
 
 %% GET DATA ID
-path_data = '/run/media/omartin/HDD_OBM/PEPITO_DATA/'; % the simulation folder path
+path_data = '/run/media/omartin/HDD_OBM/PEPITO_DATA/'; % the data folder path
 folder_data = dir(path_data);
 dataID = {folder_data(contains({folder_data.name},'.fits')).name};
 nObj = numel(dataID);
-%% STARS positions
 
-xStars = [122 158 449 524 54 449];
-yStars = [703 708 464 325 273 46];
+%% STARS positions
+xStars = [122 158 449 524 54 449]; % Stars x position in pixels
+yStars = [703 708 464 325 273 46]; % Stars y positions in pixels
 nStars = 4;%numel(xStars);
-nCrop = 42;
+nCrop = 43; 
+% Note that there is no automatic detection yet, which is not
+% pipeline-compliant
 
 %% HARDWARE CONFIGURATION
-D = 0.5;
-obs = 0.47;
-wvl = 525e-9;
-psInMas = 495.6;
-Samp = constants.radian2mas*wvl/D/2/psInMas;
-dk  = ceil(nCrop/Samp);
-tel = telescope(D,'resolution',dk,'obstructionRatio',obs);
+D = 0.5; % telescope diameter in m
+obs = 0.47; % telescope central obscuration
+wvl = 525e-9; % filter central wavelength (to be verified)
+psInMas = 495.6; % detector pixel scale (to be verified)
+Samp = constants.radian2mas*wvl/D/2/psInMas; %PSF sampling in lambda/(2D) units
+dk  = 2*round(nCrop/Samp/2); % telescope resolution:
+%Note that for a PSF nyquist-sampled PSF (Samp=1), the pupil resolution must be twice lower than the PSF/OTF size as the OTF is the pupil auto-correlation
+
+% Define Pupil
+x = linspace(-D/2,D/2,dk);
+[X,Y] = meshgrid(x);
+P = hypot(X,Y) < D/2 & hypot(X,Y)>=obs*D/2;
+tel = struct('D',D,'resolution',dk,'obs',obs,'pupil',P); % in the future, we may think about having the telescope structure defintion within pepito directly
 
 
 %% GRAB DATA
@@ -40,10 +45,7 @@ cube_LE = zeros(nCrop,nCrop,nStars);
 for j=1:nStars
     idxj = xStars(j) - nCrop/2+1:xStars(j)+nCrop/2;
     idyj = yStars(j) - nCrop/2+1:yStars(j)+nCrop/2;
-    cube_LE(:,:,j) = im_LE(idxj,idyj);
-    %cube_LE(:,:,j) = tools.processImage(im_LE(idxj,idyj),0,1,0,Samp,...
-                    %'fovInPixel',nCrop,'masking',false,'rebin',4,'tfccd',false,...
-                    %'thresholding',-Inf);
+    cube_LE(:,:,j) = im_LE(idxj,idyj);    
 end
 
 [x0,y0,nSE] = size(im_SE);

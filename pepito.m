@@ -1,7 +1,7 @@
 classdef pepito < handle
     properties
         % --------------------- Telescope configurations
-        tel;       % telescope class
+        tel;       % telescope structure containing fields D, obs and pupil
         xStars;
         yStars;
         % --------------------- Input frame
@@ -63,7 +63,7 @@ classdef pepito < handle
         function obj = pepito(SEframes,tel,psInMas,xStars,yStars,nBox,nLayer,varargin)
             inputs = inputParser;
             inputs.addRequired('SEframes',@isnumeric);
-            inputs.addRequired('tel',@(x) isa(x,'telescope') );
+            inputs.addRequired('tel',@(x) isstruct );
             inputs.addRequired('psInMas',@isnumeric);
             inputs.addRequired('xStars',@isnumeric);
             inputs.addRequired('yStars',@isnumeric);
@@ -169,7 +169,7 @@ classdef pepito < handle
             
             % -------------- 2. DEFINE TELESCOPE OTF     ----------------- %
             P = obj.tel.pupil;
-            obj.otfDL = tools.interpolateOtf(tools.pupil2otf(P,0*P,1),size(P));
+            obj.otfDL = pepitoTools.interpolateOtf(pepitoTools.pupil2otf(P,0*P,1),size(P));
             obj.otfDL = obj.otfDL/max(obj.otfDL(:));
             
             % ------------------- 3. PSF FITTING ----------------- %
@@ -439,7 +439,7 @@ classdef pepito < handle
             % loop on exposures and sources
             for k=1:nExp
                 for j=1:nSrc
-                    [xOn(k,j),yOn(k,j)] = tools.cog(squeeze(frame(:,:,k,j)),thresh);
+                    [xOn(k,j),yOn(k,j)] = pepitoTools.cog(squeeze(frame(:,:,k,j)),thresh);
                 end
             end
         end
@@ -456,7 +456,7 @@ classdef pepito < handle
                     tmp = squeeze(SEframes(:,:,k,i));
                     for j=1:nSrc                                    % loop on references
                         dX = [nX/2-xOn(k,j),nY/2-yOn(k,j)];% Get the amount of angular shifts
-                        SEframes_c(:,:,k,i,j) = tools.translateImage(tmp,dX);
+                        SEframes_c(:,:,k,i,j) = pepitoTools.translateImage(tmp,dX);
                         SEframes_c(:,:,k,i,j) = SEframes_c(:,:,k,i,j)/sum(sum(squeeze(SEframes_c(:,:,k,i,j))));
                     end
                 end
@@ -478,10 +478,10 @@ classdef pepito < handle
             k   = (24.*gamma(6./5)./5).^(5./6).*(gamma(11./6).^2./(2.*pi.^(11./3)));
             psd = k*r0.^(-5./3)*(f.^2 + 1./L0.^2).^(-11./6);
             % Remove piston
-            psd = psd.*(1 - 4*tools.sombrero(1,pi*D*f).^2);
+            psd = psd.*(1 - 4*pepitoTools.sombrero(1,pi*D*f).^2);
                               
             % Get the atmospheric OTF
-            otfAtm = fftshift(tools.psd2otf(ifftshift(psd),1/(D*Samp)^2));
+            otfAtm = fftshift(pepitoTools.psd2otf(ifftshift(psd),1/(D*Samp)^2));
             
             %3\ Multiply with the telescope OTF
             otf = otfAtm.*otfDL;
@@ -494,7 +494,7 @@ classdef pepito < handle
             end
             
             %5\ Get the PSF
-            out = tools.otfShannon2psf(otf,Samp,npsf);
+            out = pepitoTools.otfShannon2psf(otf,Samp,npsf);
         end
         
         function out = gaussianModel(x,xdata)
@@ -542,7 +542,7 @@ classdef pepito < handle
                     psfi = psfModel(:,:,iS);
                 end
                 % Translate PSFs at sources position
-                tmp  = fluxS(iS)*tools.translateImage(psfi,dX(:,iS));
+                tmp  = fluxS(iS)*pepitoTools.translateImage(psfi,dX(:,iS));
                 % Concatenate frames
                 out(:,:,iS) =  tmp + pStars(end-nS+iS);
             end
