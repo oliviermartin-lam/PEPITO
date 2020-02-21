@@ -10,12 +10,12 @@ classdef fittingTools < handle
             y = im/normFactor;
             
             %weights
-            %[F,bg,ron] = puakoTools.getFlux(y);
+            %[F,bg,ron] = pepitoTools.getFlux(y);
             %im_tmp = im_tmp-bg;
             %w = 1./sqrt(max(im_tmp,ron) + ron^2);
             %y = im_tmp.*w.*(im_tmp>0);
            
-            stellarModel = @(x,xdata) puakoTools.stellarFieldModel(x,xdata,nIm);
+            stellarModel = @(x,xdata) pepitoTools.stellarFieldModel(x,xdata,nIm);
             nParam = length(initParam);
             %2. Fitting options and initial guess
             if mod(nParam,3)
@@ -87,7 +87,7 @@ classdef fittingTools < handle
                 res = [xS,yS,fS,beta(end)*normFactor];
             end
             
-            imFit =  puakoTools.stellarFieldModel(res,psfModel,nIm);
+            imFit =  pepitoTools.stellarFieldModel(res,psfModel,nIm);
         end
         
         function out = stellarFieldModel(pStars,psfModel,nIm)
@@ -110,11 +110,11 @@ classdef fittingTools < handle
             out = 0*psfModel;
             for iS = 1:nS
                 % Translate the PSF
-                psf_i = puakoTools.translateImage(psfModel,[xS(iS),yS(iS)]);
+                psf_i = pepitoTools.translateImage(psfModel,[xS(iS),yS(iS)]);
                 % Update the image and Flux scaling:
                 out = out + psf_i*fS(iS);
             end
-            out = puakoTools.crop(out,nIm) + bg;
+            out = pepitoTools.crop(out,nIm) + bg;
         end
         
         function out = multipleImage(x,im)
@@ -141,14 +141,14 @@ classdef fittingTools < handle
             %nx      = 2*nx;
             %ny      = 2*ny;
             out     = zeros(nx,ny);
-            otf     = puakoTools.psf2otf(im);
+            otf     = pepitoTools.psf2otf(im);
             otf     = otf/max(otf(:));
             [u,v]   = freqspace([nx ny],'meshgrid');
             for i=1:n
                 yi    = yloc(i);
                 xi    = xloc(i);
                 fftPhasor = exp(-1i*pi*(u*xi + v*yi));
-                map_i = puakoTools.otf2psf(otf.*fftPhasor);
+                map_i = pepitoTools.otf2psf(otf.*fftPhasor);
                 % Adding images
                 out = out + flux(i)*map_i/sum(map_i(:));
             end
@@ -210,14 +210,14 @@ classdef fittingTools < handle
           function out = multiAnalyticIsoplanatic(x,xdata,type)
             
             if strcmp(type,'gaussian')
-                f = @(x,xdata) puakoTools.gaussian(x,xdata);
+                f = @(x,xdata) pepitoTools.gaussian(x,xdata);
                 nS = (length(x)-3)/3;
                 xfix = x(1+nS:3+nS);
                 fS   =  x(1:nS);
                 xS = x(4+nS:3+2*nS);
                 yS = x(4+2*nS:end);
             else
-                f = @(x,xdata) puakoTools.moffat(x,xdata);
+                f = @(x,xdata) pepitoTools.moffat(x,xdata);
                 nS = (length(x)-4)/3;
                 xfix = x(1+nS:4+nS);
                 fS   =  x(1:nS);
@@ -235,10 +235,10 @@ classdef fittingTools < handle
         function out = multiAnalyticAniso(x,xdata,type)
             
             if strcmp(type,'gaussian')
-                f = @(x,xdata) puakoTools.gaussian(x,xdata);
+                f = @(x,xdata) pepitoTools.gaussian(x,xdata);
                 nG  = length(x)/6;
             else
-                f = @(x,xdata) puakoTools.moffat(x,xdata);
+                f = @(x,xdata) pepitoTools.moffat(x,xdata);
                 nG  = length(x)/7;
             end
             

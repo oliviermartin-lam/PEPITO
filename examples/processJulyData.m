@@ -5,7 +5,7 @@ path_pepito = '/home/omartin/Projects/PEPITO/PEPITO/';
 addpath(genpath(path_pepito));
 
 %% GET DATA ID
-path_data = '/run/media/omartin/HDD_OBM/PEPITO_DATA/'; % the data folder path
+path_data = '/run/media/omartin/8C8C-B02C/PEPITO_DATA/'; % the data folder path
 folder_data = dir(path_data);
 dataID = {folder_data(contains({folder_data.name},'.fits')).name};
 nObj = numel(dataID);

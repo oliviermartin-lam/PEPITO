@@ -281,7 +281,7 @@ classdef covarianceTools < handle
                         
                         c   = mat2cell( fr0(kLayer)*c , nz , ones(mz,1) );
                         % First block rows
-                        rr   = cellfun( @(x,y) puakoTools.toeplitz(x,y) , c , r , 'UniformOutput' , false);
+                        rr   = cellfun( @(x,y) pepitoTools.toeplitz(x,y) , c , r , 'UniformOutput' , false);
                         
                         % First Column
                         %                         c  =  phaseStats.covariance( abs(z1-z2(1)) , atm );
@@ -302,9 +302,9 @@ classdef covarianceTools < handle
                         
                         r   = mat2cell( fr0(kLayer)*r , nz , ones(mz,1) );
                         % First blocks column
-                        cc   = cellfun( @(x,y) puakoTools.toeplitz(x,y) , c , r , 'UniformOutput' , false);
+                        cc   = cellfun( @(x,y) pepitoTools.toeplitz(x,y) , c , r , 'UniformOutput' , false);
                         
-                        out = cell2mat( puakoTools.toeplitz(cc,rr) );
+                        out = cell2mat( pepitoTools.toeplitz(cc,rr) );
                         out(~mask,:) = [];
                         out(:,~mask) = [];
                         
@@ -361,9 +361,9 @@ classdef covarianceTools < handle
             n = n1+n2-1;
             T = cell(n,1);
             for k=1:n
-                T{k} = puakoTools.toeplitz(n2:-1:1,n2:n)+n*(k-1);
+                T{k} = pepitoTools.toeplitz(n2:-1:1,n2:n)+n*(k-1);
             end
-            T = cell2mat(puakoTools.toeplitz(T(n2:-1:1),T(n2:n)));
+            T = cell2mat(pepitoTools.toeplitz(T(n2:-1:1),T(n2:n)));
             T(~mask2(:),:) = [];
             T(:,~mask1(:)) = [];
             map = zeros(n);
@@ -401,8 +401,8 @@ classdef covarianceTools < handle
             T = mat2cell(map,n,ones(1,n));
             c = cellfun(@(x) x(n2:-1:1),T,'UniformOutput',false);
             r = cellfun(@(x) x(n2:n),T,'UniformOutput',false);
-            T=cellfun(@(x,y) puakoTools.toeplitz(x,y),c,r,'UniformOutput',false);
-            T=puakoTools.toeplitz(T(n2:-1:1),T(n2:n));
+            T=cellfun(@(x,y) pepitoTools.toeplitz(x,y),c,r,'UniformOutput',false);
+            T=pepitoTools.toeplitz(T(n2:-1:1),T(n2:n));
             mat = cell2mat(T);
             
             mat(~mask2(:),:) = [];

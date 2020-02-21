@@ -1,4 +1,4 @@
-classdef puakoTools < fourierTools & imageTools & covarianceTools & psfTools & fittingTools
+classdef pepitoTools < fourierTools & imageTools & covarianceTools & psfTools & fittingTools
     
     methods (Static)
         

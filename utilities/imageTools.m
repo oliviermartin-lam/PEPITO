@@ -151,7 +151,7 @@ classdef imageTools < handle
             end
             
             if npixnoncorr
-                frame_suppl = puakoTools.createDeadPixFrame(tmp);
+                frame_suppl = pepitoTools.createDeadPixFrame(tmp);
                 nSup        = size(frame_suppl,1);
                 %Frame concatenation
                 new_frame                     = zeros(nDeadPix+nSup,10,2);
@@ -215,7 +215,7 @@ classdef imageTools < handle
                             end
                         end
                     end
-                    imagerot = puakoTools.crop(imagerot,size(im_origin));
+                    imagerot = pepitoTools.crop(imagerot,size(im_origin));
             end
         end
         
@@ -340,9 +340,9 @@ classdef imageTools < handle
             [u,v] = freqspace(size(im_),'meshgrid');
             phasor = exp(-1i*pi*(u*dy+v*dx));
             % Translates the image
-            otf = puakoTools.psf2otf(im_);
+            otf = pepitoTools.psf2otf(im_);
             otf = otf/max(otf(:));
-            im_ = puakoTools.otf2psf(otf.*phasor);
+            im_ = pepitoTools.otf2psf(otf.*phasor);
             im_ = im_/sum(im_(:))*sum(image(:));
             % Empty zone filling
             if any(size(im_)>size(image))
@@ -355,7 +355,7 @@ classdef imageTools < handle
                 im_(:,iyi) = val;
                 im_(:,iyf) = val;
                 % Cropping
-                im_ = puakoTools.crop(im_,[nx,ny]);
+                im_ = pepitoTools.crop(im_,[nx,ny]);
             end
             
         end
@@ -368,7 +368,7 @@ classdef imageTools < handle
             
             % Get the high-resolution PSF
             if overSampling > 1
-                psf_hr = puakoTools.interpolateOtf(psf,npsfx2);
+                psf_hr = pepitoTools.interpolateOtf(psf,npsfx2);
             else
                 psf_hr = psf;
             end
@@ -381,19 +381,19 @@ classdef imageTools < handle
             dy        = floor(npsfy2/2-idy)+1;
             if (dx~=0) | (dy~=0)
                 % Get the OTF
-                otf_hr = puakoTools.psf2otf(psf_hr);
+                otf_hr = pepitoTools.psf2otf(psf_hr);
                 % Apply the Phasor
                 [u,v]     = freqspace(length(otf_hr),'meshgrid');
                 fftPhasor = exp(-1i.*pi.*(u*dy+v*dx));
                 otf_hr    = otf_hr.*fftPhasor;
                 % Get the PSF low-resolution
-                imCor  = puakoTools.otf2psf(otf_hr);
-                imCor  = puakoTools.interpolateOtf(imCor,npsfx);
+                imCor  = pepitoTools.otf2psf(otf_hr);
+                imCor  = pepitoTools.interpolateOtf(imCor,npsfx);
                 imCor  = flux*imCor/sum(imCor(:));
-                otf_lr = puakoTools.psf2otf(imCor);
+                otf_lr = pepitoTools.psf2otf(imCor);
             else
                 imCor = psf;
-                otf_lr = puakoTools.psf2otf(imCor);
+                otf_lr = pepitoTools.psf2otf(imCor);
             end
         end
         

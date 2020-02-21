@@ -41,7 +41,7 @@ classdef psfTools < handle
                 method = 'contour';
             end
             %Interpolation   
-            im2     = puakoTools.interpolateOtf(psf,rebin*size(psf,1));
+            im2     = pepitoTools.interpolateOtf(psf,rebin*size(psf,1));
             if strcmp(method,'cutting')
                 % Brutal approach when the PSF is centered and aligned
                 % x-axis FWHM
@@ -82,17 +82,17 @@ classdef psfTools < handle
                 end
                 % direction.
             elseif strcmp(method,'Gaussian')
-                xdata   = puakoTools.getFocalGrid(size(psf),pixelScale);
+                xdata   = pepitoTools.getFocalGrid(size(psf),pixelScale);
                 x0      = [max(psf(:)),20,20,1,0,0,0];
-                f       = @(x,xdata) puakoTools.gaussianModel(x,xdata);
+                f       = @(x,xdata) pepitoTools.gaussianModel(x,xdata);
                 beta    = lsqcurvefit(f,x0,xdata,psf);
                 FWHMx   = beta(2)*2*sqrt(2*log(2));
                 FWHMy   = beta(3)*2*sqrt(2*log(2));
                 theta   = beta(4);
             elseif strcmp(method,'Moffat')
-                xdata   = puakoTools.getFocalGrid(size(psf),pixelScale);
+                xdata   = pepitoTools.getFocalGrid(size(psf),pixelScale);
                 x0      = [max(psf(:)),20,20,1,0,0,0];
-                f       = @(x,xdata) puakoTools.moffatModel(x,xdata);
+                f       = @(x,xdata) pepitoTools.moffatModel(x,xdata);
                 beta    = lsqcurvefit(f,x0,xdata,psf);
                 FWHMx   = 2*beta(2)*sqrt(2^(1./beta(4))-1);
                 FWHMy   = 2*beta(3)*sqrt(2^(1./beta(4))-1);
@@ -107,19 +107,19 @@ classdef psfTools < handle
             
            
             %1\ Get the Image OTF            
-            psf     = puakoTools.recenterPSF(psf0,4);
-            otf     = puakoTools.psf2otf(psf);
+            psf     = pepitoTools.recenterPSF(psf0,4);
+            otf     = pepitoTools.psf2otf(psf);
             otf     = otf/max(otf(:));
            
             %2\ Get the Diffraction-limit OTF
             notf    = size(psf0,2);
             if Samp >= 1
-                otfDL   = puakoTools.telescopeOtf(pupil,2*Samp);
-                otfDL   = puakoTools.interpolate(otfDL,notf,'spline');
+                otfDL   = pepitoTools.telescopeOtf(pupil,2*Samp);
+                otfDL   = pepitoTools.interpolate(otfDL,notf,'spline');
             else
-                otfDL   = puakoTools.telescopeOtf(pupil,2);
-                psfDL  = puakoTools.otfShannon2psf(otfDL,2*Samp,notf);
-                otfDL  = puakoTools.psf2otf(psfDL);
+                otfDL   = pepitoTools.telescopeOtf(pupil,2);
+                psfDL  = pepitoTools.otfShannon2psf(otfDL,2*Samp,notf);
+                otfDL  = pepitoTools.psf2otf(psfDL);
             end
             otfDL   = otfDL/max(otfDL(:));
             
@@ -132,7 +132,7 @@ classdef psfTools < handle
             
             %4\ Get the uncertainty from the precision on the maximum intensity value and the image sum         
             % note that it does not include the uncertainty du to dark subtraction
-            [~,~,ron] = puakoTools.getFlux(psf);                        
+            [~,~,ron] = pepitoTools.getFlux(psf);                        
             Fim = sum(psf(:));
             Mim = max(psf(:));
 	    

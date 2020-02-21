@@ -24,8 +24,8 @@ classdef fourierTools < handle
         end
         
         function out = telescopeOtf(pupil,overSampling)
-            extendedPup  = puakoTools.enlargeOtf(pupil,overSampling);
-            out = fftshift(puakoTools.fftCorrel(extendedPup,extendedPup));
+            extendedPup  = pepitoTools.enlargeOtf(pupil,overSampling);
+            out = fftshift(pepitoTools.fftCorrel(extendedPup,extendedPup));
         end
         
         function out = telescopePsf(pupil,overSampling,peakLocation)
@@ -35,15 +35,15 @@ classdef fourierTools < handle
             nSize = size(pupil,1);
             
             if overSampling >1
-                otf = puakoTools.telescopeOtf(pupil,overSampling);
-                otf = puakoTools.interpolateOtf(otf,nSize);
-                out = puakoTools.otf2psf(otf,peakLocation);
+                otf = pepitoTools.telescopeOtf(pupil,overSampling);
+                otf = pepitoTools.interpolateOtf(otf,nSize);
+                out = pepitoTools.otf2psf(otf,peakLocation);
             else
                 
-                otf = puakoTools.telescopeOtf(pupil,2);
-                otf = puakoTools.interpolateOtf(otf,nSize/overSampling);
-                out = puakoTools.otf2psf(otf);
-                out = puakoTools.interpolateOtf(out,nSize);
+                otf = pepitoTools.telescopeOtf(pupil,2);
+                otf = pepitoTools.interpolateOtf(otf,nSize/overSampling);
+                out = pepitoTools.otf2psf(otf);
+                out = pepitoTools.interpolateOtf(out,nSize);
             end
             
         end
@@ -55,8 +55,8 @@ classdef fourierTools < handle
             if nargin < 3
                 overSampling = 1;
             end
-            otf = puakoTools.pupil2otf(pupil,phase,overSampling);
-            out = puakoTools.otf2psf(otf);
+            otf = pepitoTools.pupil2otf(pupil,phase,overSampling);
+            out = pepitoTools.otf2psf(otf);
         end
         
         function out = pupil2otf(pupil,phase,Samp)
@@ -68,18 +68,18 @@ classdef fourierTools < handle
             end
             
             if Samp >=1
-                P   = puakoTools.enlargeOtf(pupil,2*Samp);
-                phi = puakoTools.enlargeOtf(phase,2*Samp);
+                P   = pepitoTools.enlargeOtf(pupil,2*Samp);
+                phi = pepitoTools.enlargeOtf(phase,2*Samp);
                 E   =  P.*exp(1i.*phi);
-                out = fftshift(puakoTools.fftCorrel(E,E));
+                out = fftshift(pepitoTools.fftCorrel(E,E));
             else
-                P   = puakoTools.enlargeOtf(pupil,2);
-                phi = puakoTools.enlargeOtf(phase,2);
+                P   = pepitoTools.enlargeOtf(pupil,2);
+                phi = pepitoTools.enlargeOtf(phase,2);
                 E   =  P.*exp(1i.*phi);
-                otf = fftshift(puakoTools.fftCorrel(E,E));
+                otf = fftshift(pepitoTools.fftCorrel(E,E));
                 otf = otf/max(otf(:));
-                psf  = real(puakoTools.otfShannon2psf(otf,Samp,size(otf,1)));
-                out = puakoTools.psf2otf(psf);
+                psf  = real(pepitoTools.otfShannon2psf(otf,Samp,size(otf,1)));
+                out = pepitoTools.psf2otf(psf);
             end
             out = out/max(out(:));
         end
@@ -134,36 +134,36 @@ classdef fourierTools < handle
                 %     % Zero-pad the OTF to get the good PSF pixel scale
                 otf    = padarray(otfShannon,round((Samp-1)*size(otfShannon)/2),'both');
                 % Interpolate the OTF to crop the PSF to the desired FOV
-                otf    = puakoTools.interpolateOtf(otf,fov);
+                otf    = pepitoTools.interpolateOtf(otf,fov);
                 otf    = otf/max(otf(:));
-                out    = puakoTools.otf2psf(otf);
+                out    = pepitoTools.otf2psf(otf);
             elseif Samp ==1
-                otf    = puakoTools.interpolateOtf(otfShannon,fov);
+                otf    = pepitoTools.interpolateOtf(otfShannon,fov);
                 otf    = otf/max(otf(:));
-                out    = puakoTools.otf2psf(otf);
+                out    = pepitoTools.otf2psf(otf);
             else
                 % OTF are derived for a Nyquist-sampled PSF
-                otf        = puakoTools.interpolateOtf(otfShannon,fov/Samp);
+                otf        = pepitoTools.interpolateOtf(otfShannon,fov/Samp);
                 otf(otf<0) = 0;
                 otf        = otf/max(otf(:));
-                out        = puakoTools.otf2psf(otf);
-                out        = puakoTools.interpolateOtf(out,fov);
+                out        = pepitoTools.otf2psf(otf);
+                out        = pepitoTools.interpolateOtf(out,fov);
             end
         end
         
         function out = psf2otf(psf)
-            out = (puakoTools.rolledFFT(psf))/sum(psf(:));
+            out = (pepitoTools.rolledFFT(psf))/sum(psf(:));
         end
         
         function out = psd2otf(psd,pixelScale)
-            cov = puakoTools.psd2cov(psd,pixelScale);
-            sf  = puakoTools.cov2sf(cov);
-            out = puakoTools.sf2otf(sf);
+            cov = pepitoTools.psd2cov(psd,pixelScale);
+            sf  = pepitoTools.cov2sf(cov);
+            out = pepitoTools.sf2otf(sf);
         end
         
         function out = psd2psf(psd,pixelScale)
-            otf = fftshift(puakoTools.psd2otf(psd,pixelScale));
-            out = puakoTools.otf2psf(otf);
+            otf = fftshift(pepitoTools.psd2otf(psd,pixelScale));
+            out = pepitoTools.otf2psf(otf);
         end
         
     end
