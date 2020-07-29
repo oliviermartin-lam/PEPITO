@@ -154,7 +154,32 @@ classdef fittingTools < handle
             end
         end
         
+        
+        
         % Gaussian/Moffat-fitting
+        function [out,beta] = fitImage(im,xdata,model)
+            
+            if strcmpi(model,'GAUSSIAN')
+                fun = @(x,xdata) fittingTools.gaussian(x,xdata);
+                lb = [0 0,0,0,-size(im,1),-size(im,2)];
+                ub = [1e2, 1e2,1e2,2*pi,size(im,1),size(im,2)];
+                x0 = [1,.1,.1,0,0,0];
+            else
+                fun = @(x,xdata) fittingTools.moffat(x,xdata);
+                lb = [0 0,0,0,0,-size(im,1),-size(im,2)];
+                ub = [1e3, 1e3,1e3,1e3,2*pi,size(im,1),size(im,2)];
+                x0 = [1,1,1,2,0,0,0];
+            end
+            
+            opt = optimoptions(@lsqcurvefit,'MaxIter',3e2,...
+                'TolX',1e-14,'TolFun',1e-14,'MaxFunEvals',3e2,...
+                'Display','iter');
+            
+            %3. Fitting procedure
+            beta = lsqcurvefit(fun,x0,xdata,im,lb,ub,opt);
+            out  = fun(beta,xdata); 
+            
+        end
         function out = gaussian(x,xdata)
             % ------- Grabbing parameters ---------%
             I0 = x(1);          %Amplitude

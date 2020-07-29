@@ -41,7 +41,7 @@ classdef psfTools < handle
                 method = 'contour';
             end
             %Interpolation   
-            im2     = pepitoTools.interpolateOtf(psf,rebin*size(psf,1));
+            im2     = pepitoTools.crop(pepitoTools.interpolateOtf(psf,rebin*size(psf,1)),size(psf,1));
             if strcmp(method,'cutting')
                 % Brutal approach when the PSF is centered and aligned
                 % x-axis FWHM

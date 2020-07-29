@@ -3,7 +3,14 @@ classdef imageTools < handle
     % Tools facility for image manipulation
     
     methods (Static)
-                           
+          
+        function out = normalize(input,method)
+            if strcmp(method,'max')
+                out = input/max(input(:));
+            else
+                out = input/sum(input(:));
+            end
+        end
         function makeAxisSquared(n)
             for i=1:numel(n)
                 axesHandles = findobj(get(figure(n(i)),'Children'), 'flat','Type','axes');
@@ -13,24 +20,29 @@ classdef imageTools < handle
         end
                         
         function out = crop(input, ncrop)
-            nFrames = size(input,3);
             
-            if isscalar(ncrop)
-                ncrop = [ncrop ncrop];
-            end
-            
-            dim = size(input);
-            out = zeros(ncrop(1), ncrop(2), nFrames);
-            for iFrame = 1:nFrames
-                if all(ncrop<dim)
-                    deb = round((dim - ncrop) / 2 + 1);
-                    fin = round((dim + ncrop) / 2);
-                    out(:,:,iFrame) = input(deb(1):fin(1), deb(2):fin(2), iFrame);
-                else
-                    deb = round((ncrop-dim) / 2 + 1);
-                    fin = round((ncrop+dim) / 2);
-                    out(deb(1):fin(1), deb(1):fin(1), iFrame) = input(:,:,iFrame);
+            if isvector(input)
+                out = input(1:ncrop);
+            else
+                nFrames = size(input,3);
+                
+                if isscalar(ncrop)
+                    ncrop = [ncrop ncrop];
                 end
+                
+                dim = size(input);
+                out = zeros(ncrop(1), ncrop(2), nFrames);
+                for iFrame = 1:nFrames
+                    if all(ncrop<dim)
+                        deb = round((dim - ncrop) / 2 + 1);
+                        fin = round((dim + ncrop) / 2);
+                        out(:,:,iFrame) = input(deb(1):fin(1), deb(2):fin(2), iFrame);
+                    else
+                        deb = round((ncrop-dim) / 2 + 1);
+                        fin = round((ncrop+dim) / 2);
+                        out(deb(1):fin(1), deb(1):fin(1), iFrame) = input(:,:,iFrame);
+                    end
+                end              
             end
         end
         
@@ -329,21 +341,27 @@ classdef imageTools < handle
                 val = 0;
             end
             
+            dx = dX(1);
+            dy = dX(2);
+            
             % Zero-pad the suppot to avoid fft buffer circulation effect
             [nx,ny] = size(image);
             % nx -> rows
             % ny -> columns
             im_ = padarray(image,floor([nx,ny]/2),'both');
-            % Derives the fourier phasor
-            dx = dX(1);
-            dy = dX(2);
-            [u,v] = freqspace(size(im_),'meshgrid');
+            [ny_,nx_] = size(im_);
+            
+            % Derives the fourier phasor            
+            [u,v] = freqspace([ny_,nx_],'meshgrid');
             phasor = exp(-1i*pi*(u*dy+v*dx));
+          
             % Translates the image
-            otf = pepitoTools.psf2otf(im_);
-            otf = otf/max(otf(:));
-            im_ = pepitoTools.otf2psf(otf.*phasor);
-            im_ = im_/sum(im_(:))*sum(image(:));
+            im_ = real( ifft2( fft2( im_ ) .* fftshift(phasor) ) );
+            %otf = pepitoTools.psf2otf(im_);
+            %otf = otf/max(otf(:));
+            %im_ = pepitoTools.otf2psf( otf .* phasor );
+            
+            %0.0104    0.0173    0.0075    0.0094
             % Empty zone filling
             if any(size(im_)>size(image))
                 ixi = round(1:nx/2 + dx);
@@ -358,6 +376,44 @@ classdef imageTools < handle
                 im_ = pepitoTools.crop(im_,[nx,ny]);
             end
             
+            im_ = im_/sum(im_(:))*sum(image(:));
+
+            
+%             % Zero-pad the support 
+%             [ny,nx] = size(image);
+%             % nx -> rows
+%             % ny -> columns
+%             im_ = padarray(image,floor([ny,nx]/2),'both');
+%             [ny_,nx_] = size(im_);
+%             
+%             % Derives the fourier phasor
+%             dx = dX(1);
+%             dy = dX(2);            
+%             py = exp(-2i*pi*dy*(0:ny_-1)/ny_);
+%             px = exp(-2i*pi*dx*(0:nx_-1)/nx_);
+%             phasor = py' * px;
+%             
+%             % Translates the image
+%             %otf = fft2( ( im_ ) );
+%             im_ = real( fft2( fft2( im_ ) .* phasor ) );
+%                       
+%   
+%             % Empty zone filling
+%             if any(size(im_)>size(image))
+%                 ixi = round(1:nx/2 + dx);
+%                 ixf = round(3*nx/2+dx+1):size(im_,2);
+%                 iyi = round(1:ny/2 + dy);
+%                 iyf = round(3*ny/2+dy+1):size(im_,1);
+%                 im_(iyi,:) = val;
+%                 im_(iyf,:) = val;
+%                 im_(:,ixi) = val;
+%                 im_(:,ixf) = val;
+%                 % Cropping
+%                 im_ = pepitoTools.crop(im_,[ny,nx]);
+%             end
+%             
+%             % Normalization
+%             im_ = im_/sum(im_(:))*sum(image(:));
         end
         
         function [imCor,otf_lr] = recenterPSF(psf,overSampling)

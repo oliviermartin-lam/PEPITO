@@ -409,5 +409,29 @@ classdef covarianceTools < handle
             mat(:,~mask1(:)) = [];
             
         end
+        
+        function out = mcDonald(x)
+            out = x.^(5/6.).*besselk(5./6,x)./(2^(5/6.)*gamma(11/6.)) ;
+            out(find(x == 0)) = 3/5.;
+        end
+        
+         function out = sombrero(n,x)
+            %% SOMBRERO Order n sombrero function
+            %
+            % out = sombrero(n,x) computes besselj(n,x)/x
+            
+            if n==0
+                out = besselj(0,x)./x;
+            else
+                if n>1
+                    out = zeros(size(x));
+                else
+                    out = 0.5*ones(size(x));
+                end
+                u = x~=0;
+                x = x(u);
+                out(u) = besselj(n,x)./x;
+            end
+        end
     end
 end
